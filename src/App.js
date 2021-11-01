@@ -10,50 +10,54 @@ if (typeof Highcharts === "object") {
   networkgraph(Highcharts);
 }
 
-let data = GenerateSeries.linearPath(2).data
+let data = GenerateSeries.linearPath(2).data;
 
 export default class App extends React.Component {
   constructor(props) {
     super(props);
-    this.mychart = createRef()
+    this.mychart = createRef();
 
     this.state = {
       options: {
         chart: {
           type: "networkgraph",
-          marginTop: 80
+          marginTop: 80,
         },
         title: {
-          text: "Network graph"
+          text: "Network graph",
         },
         plotOptions: {
           networkgraph: {
             keys: ["from", "to"],
             layoutAlgorithm: {
-              enableSimulation: true,
-              linkLength: 66,
+              // enableSimulation: true,
+              // linkLength: 66,
               integration: "verlet",
               approximation: "barnes-hut",
-              gravitationalConstant: 0.8
-            }
+              gravitationalConstant: 0,
+              friction: -0.9,
+            },
+            animation: {
+                duration: 0.5
+            },
           }
         },
         series: [
           {
             events: {
               click: (e) => {
-                console.log('series events', e)
+                console.log("series events", e);
                 // this.onClick(e);
-                this.updateColor();
-              }
+                this.updateColor(e);
+              },
             },
             marker: {
-              radius: 7
+              radius: 7,
             },
             dataLabels: {
               enabled: true,
               linkFormat: "",
-              allowOverlap: true
+              allowOverlap: true,
             },
             data: data,
             // [
@@ -80,46 +84,54 @@ export default class App extends React.Component {
             //     marker: { radius: 15 }
             //   }
             // ]
-          }
-        ]
-      }
+          },
+        ],
+      },
     };
   }
 
   componentDidMount = () => {
     // update to the first test case
     this.updateTestCase();
-  }
+  };
 
   updateTestCase = () => {
     // go to the next test case - match the correct function to update state.options
     // update and auto-generate the nodes and series in options
-
     // MVP - select the test case manually
-  }
+  };
 
-  runTest= () => {
+  runTest = () => {
     // run tests one by one and store the responses in a TXT
     // if the test case is linear, go from end to end
     // if the test case is traversal, then run an algo
     // if the test case is simulation, then randomly generate paths
-  }
+  };
 
-  updateColor = () => {
-    let myserie = this.state.options.series;
-    myserie[0].nodes[0].color = "red";
-    console.log('series', this.mychart.chart.series[0].nodes)
-    // nodes show up in order listed
-    // this.setState({ options: { series: myserie } });
-    this.mychart.chart.series[0].nodes[0].update({
-      color: '#aaa'
-    })
-  }
+  updateColor = (e) => {
+    let nodes = this.mychart.chart.series[0].nodes;
+    // find the node with the right id
+    nodes.forEach((node, index) => {
+      if (node.id === e.point.id) {
+        this.mychart.chart.series[0].nodes[index].update({
+          color: "#aaa",
+          marker: { radius: 15 },
+          link: {
+            length: 50
+          }
+        });
+      }
+    });
+  };
 
   render() {
     return (
       <div>
-        <HighchartsReact ref={(element) => this.mychart = element} highcharts={Highcharts} options={this.state.options} />
+        <HighchartsReact
+          ref={(element) => (this.mychart = element)}
+          highcharts={Highcharts}
+          options={this.state.options}
+        />
       </div>
     );
   }
