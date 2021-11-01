@@ -90,6 +90,8 @@ export default class App extends React.Component {
   updateTestCase = () => {
     // go to the next test case - match the correct function to update state.options
     // update and auto-generate the nodes and series in options
+
+    // MVP - select the test case manually
   }
 
   runTest= () => {
