@@ -4,10 +4,13 @@ import { render } from "react-dom";
 import Highcharts from "highcharts/highstock";
 import HighchartsReact from "highcharts-react-official";
 import networkgraph from "highcharts/modules/networkgraph";
+import { GenerateSeries } from "./SeriesGenerator";
 
 if (typeof Highcharts === "object") {
   networkgraph(Highcharts);
 }
+
+let data = GenerateSeries.linearPath(7)
 
 export default class App extends React.Component {
   constructor(props) {
@@ -52,20 +55,21 @@ export default class App extends React.Component {
               linkFormat: "",
               allowOverlap: true
             },
-            data: [
-              {
-                from: "0-0",
-                to: "1-0"
-              },
-              {
-                from: "0-0",
-                to: "1-2"
-              },
-              {
-                from: "0-0",
-                to: "1-1"
-              }
-            ],
+            data: data,
+            // [
+            //   {
+            //     from: "0-0",
+            //     to: "1-0"
+            //   },
+            //   {
+            //     from: "0-0",
+            //     to: "1-2"
+            //   },
+            //   {
+            //     from: "0-0",
+            //     to: "1-1"
+            //   }
+            // ],
             nodes: [
               {
                 id: "1-0",
