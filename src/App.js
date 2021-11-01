@@ -10,7 +10,7 @@ if (typeof Highcharts === "object") {
   networkgraph(Highcharts);
 }
 
-let data = GenerateSeries.linearPath(7)
+let data = GenerateSeries.linearPath(2).data
 
 export default class App extends React.Component {
   constructor(props) {
@@ -31,7 +31,7 @@ export default class App extends React.Component {
             keys: ["from", "to"],
             layoutAlgorithm: {
               enableSimulation: true,
-              linkLength: 33,
+              linkLength: 66,
               integration: "verlet",
               approximation: "barnes-hut",
               gravitationalConstant: 0.8
@@ -70,16 +70,16 @@ export default class App extends React.Component {
             //     to: "1-1"
             //   }
             // ],
-            nodes: [
-              {
-                id: "1-0",
-                marker: { radius: 15 }
-              },
-              {
-                id: "1-1",
-                marker: { radius: 15 }
-              }
-            ]
+            // nodes: [
+            //   {
+            //     id: "1-0",
+            //     marker: { radius: 15 }
+            //   },
+            //   {
+            //     id: "1-1",
+            //     marker: { radius: 15 }
+            //   }
+            // ]
           }
         ]
       }
