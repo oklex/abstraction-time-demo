@@ -4,9 +4,8 @@
 export const GenerateSeries = {
   linearPath(depth, knowledge = 0) {
     let maxChildren = 1;
-    let data = TreeGenerator(depth, "path", maxChildren, knowledge);
+    let data = TreeGenerator(depth, "", maxChildren, knowledge);
     let nodes = [];
-    console.log(data);
     return { data, nodes };
   },
   randomTree(depth, maxNodes = 1, knowledge = 0) {
@@ -29,13 +28,7 @@ const TreeGenerator = (
   knowledge,
   random = false
 ) => {
-  let data = [];
-  return TreeGeneratorHelper(
-    1,
-    maxDepth,
-    maxChildren,
-    append.concat("-0")
-  );
+  return TreeGeneratorHelper(1, maxDepth, maxChildren, append.concat("0"));
 };
 
 const TreeGeneratorHelper = (
@@ -45,22 +38,27 @@ const TreeGeneratorHelper = (
   parentNodeId
 ) => {
   // recursively returns the new data
+  let returnData = [];
   let data = [];
   for (let i = 0; i < maxChildren; i++) {
     let thisNode = parentNodeId.concat(i.toString());
-    data = data.concat({
+    returnData = [
+      {
         from: parentNodeId,
-        to: thisNode
-    })
-    console.log(thisNode);
+        to: thisNode,
+      },
+    ];
     if (currentDepth < maxDepth) {
-      data = data.concat(
-        TreeGeneratorHelper(currentDepth + 1, maxDepth, maxChildren, thisNode)
+      data = TreeGeneratorHelper(
+        currentDepth + 1,
+        maxDepth,
+        maxChildren,
+        thisNode
       );
     }
   }
 
-  return data;
+  return returnData.concat(data);
 };
 
 // data: [
