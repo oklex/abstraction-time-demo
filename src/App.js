@@ -38,8 +38,8 @@ export default class App extends React.Component {
           networkgraph: {
             keys: ["from", "to"],
             layoutAlgorithm: {
-              enableSimulation: true,
-              linkLength: 66,
+              // enableSimulation: true,
+              // linkLength: 66,
               integration: "verlet",
               approximation: "barnes-hut",
               gravitationalConstant: 0.8,
@@ -52,7 +52,7 @@ export default class App extends React.Component {
               click: (e) => {
                 console.log("series events", e);
                 // this.onClick(e);
-                this.updateColor();
+                this.updateColor(e);
               },
             },
             marker: {
@@ -82,34 +82,25 @@ export default class App extends React.Component {
   };
 
   runTest = () => {
-    // generate destination node
-    //    -> if the node exists, then make it the destination
-    // run tests one by one
-    //  if the test case is linear, go from end to end
-    //  if the test case is traversal, then run an algo
-    //  if the test case is simulation, then randomly generate paths
-    
-    // run updateMemory on loop
+    // run tests one by one and store the responses in a TXT
+    // if the test case is linear, go from end to end
+    // if the test case is traversal, then run an algo
+    // if the test case is simulation, then randomly generate paths
   };
 
-  updateMemory = () => {
-    // get lowest node in memory, or if memory is empty, set to root
-    // get all edges for this node -> select the best fit node to add to memory next
-    //    if this node is "learned" then check the next one (up to abstraction capcity)
-    //    if multiple nodes in-sequence are "learned" then abstract them into a path
-    // if working memory exceeds capacity, then "forget" the first node
-    //    -> if that node is an abstraction, then update capacity
-    // 
-  };
-
-  updateColor = () => {
-    let myserie = this.state.options.series;
-    myserie[0].nodes[0].color = "red";
-    console.log("series", this.mychart.chart.series[0].nodes);
-    // nodes show up in order listed
-    // this.setState({ options: { series: myserie } });
-    this.mychart.chart.series[0].nodes[0].update({
-      color: "#aaa",
+  updateColor = (e) => {
+    let nodes = this.mychart.chart.series[0].nodes;
+    // find the node with the right id
+    nodes.forEach((node, index) => {
+      if (node.id === e.point.id) {
+        this.mychart.chart.series[0].nodes[index].update({
+          color: "#aaa",
+          marker: { radius: 15 },
+          link: {
+            length: 50
+          }
+        });
+      }
     });
   };
 
