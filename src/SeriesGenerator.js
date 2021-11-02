@@ -2,7 +2,8 @@
 // generate a random tree (depth, max nodes, knowledge level)
 
 export const GenerateSeries = {
-  linearPath(depth, maxChildren = 5, knowledge = 0) {
+  linearPath(depth, knowledge = 0) {
+    let maxChildren = 1;
     let data = TreeGenerator(depth, "path", maxChildren, knowledge);
     let nodes = [];
     console.log(data);
