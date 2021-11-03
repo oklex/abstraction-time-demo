@@ -12,8 +12,8 @@ if (typeof Highcharts === "object") {
 
 export default class App extends React.Component<any, any> {
   mychart: any;
-  networkDepth: number
-  networkNodeChildren: number
+  networkDepth: number;
+  networkNodeChildren: number;
 
   constructor(props: any) {
     super(props);
@@ -152,10 +152,25 @@ export default class App extends React.Component<any, any> {
     });
   };
 
+  getNodeDetails = (nodeId: string) => {
+    let nodes = this.mychart.chart.series[0].nodes;
+    for (let i = 0; i < nodes.length; i++) {
+      if (nodes[i].id === nodeId) {
+        return nodes[i];
+      }
+    }
+  };
+
   render() {
     return (
       <div>
-        <button onClick={() => {console.log('testLogic class not initialized')}}>run test</button>
+        <button
+          onClick={() => {
+            console.log("testLogic class not initialized");
+          }}
+        >
+          run test
+        </button>
         <HighchartsReact
           ref={(element) => (this.mychart = element)}
           highcharts={Highcharts}
