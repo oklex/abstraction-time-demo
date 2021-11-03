@@ -61,6 +61,10 @@ const TreeGeneratorHelper = (
   return returnData.concat(data);
 };
 
+const generateOptions = () => {
+  return {}
+}
+
 // data: [
 //     {
 //       from: "0-0",
