@@ -61,9 +61,50 @@ const TreeGeneratorHelper = (
   return returnData.concat(data);
 };
 
-const generateOptions = () => {
-  return {}
-}
+export const GenerateOptions = (networkDepth) => {
+  return {
+    chart: {
+      type: "networkgraph",
+      marginTop: 80,
+    },
+    title: {
+      text: "Network graph",
+    },
+    plotOptions: {
+      networkgraph: {
+        keys: ["from", "to"],
+        layoutAlgorithm: {
+          // enableSimulation: true,
+          // linkLength: 66,
+          integration: "verlet",
+          approximation: "barnes-hut",
+          gravitationalConstant: 0.8,
+        },
+      },
+    },
+    series: [
+      {
+        events: {
+          // buggy
+          // click: (e) => {
+          //   console.log("series events", e);
+          //   // this.onClick(e);
+          //   this.updateColor(e);
+          // },
+        },
+        marker: {
+          radius: 7,
+        },
+        dataLabels: {
+          enabled: true,
+          linkFormat: "",
+          allowOverlap: true,
+        },
+        data: GenerateSeries.linearPath(networkDepth).data,
+      },
+    ],
+  };
+};
 
 // data: [
 //     {
