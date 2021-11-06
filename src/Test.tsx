@@ -3,6 +3,8 @@ import { render } from "react-dom";
 import Highcharts from "highcharts/highstock";
 import HighchartsReact from "highcharts-react-official";
 import networkgraph from "highcharts/modules/networkgraph";
+import { findDiff, getRandomInt } from "./utils";
+import { TIMEOUT } from "dns";
 
 if (typeof Highcharts === "object") {
   networkgraph(Highcharts);
@@ -17,6 +19,7 @@ interface Iid {
 }
 
 interface INode extends Any {
+  id: string;
   linksFrom: ILinks[];
   linksTo: ILinks[];
 }
@@ -31,8 +34,8 @@ type Any = any;
 interface ITestProps {
   depth: number;
   maxChildNodes: number;
-  workingMemoryLimit: number,
-  abstractionLimit: number,
+  workingMemoryLimit: number;
+  abstractionLimit: number;
 
   options: any;
   rootId: string;
@@ -42,6 +45,8 @@ interface ITestState {
   destinationId: string;
   activeMemory: IMemoryNode[];
   abstractionCapacityRemaining: number;
+
+  running: boolean;
 }
 
 export class TestLogic extends React.Component<ITestProps, ITestState> {
@@ -53,98 +58,173 @@ export class TestLogic extends React.Component<ITestProps, ITestState> {
     this.state = {
       destinationId: "",
       activeMemory: [],
-      abstractionCapacityRemaining: this.props.abstractionLimit
+      abstractionCapacityRemaining: this.props.abstractionLimit,
+      running: false,
     };
   }
 
-  runTest = () => {
+  runTest = async () => {
+    if (!this.state.destinationId) {
+      this.generateDestination();
+    }
     console.log("run test: ", this.state.activeMemory, this.props.rootId);
     this.setState({
       activeMemory: [...this.state.activeMemory, { id: this.props.rootId }],
     });
-    while (!this.checkDestination()) {
-      setTimeout(() => this.runTestStep(), 1000);
-      break;
+    while (!this.checkDestination() && !this.state.running) {
+      this.setState({
+        running: true,
+      });
+      await Promise.all([this.runTestStep()]).then(() => {
+        this.setState({
+          running: false,
+        });
+      });
     }
   };
 
-  runTestStep = () => {
-    console.log('run test step', this);
-    // find next node
-    // add to memory
+  runTestStep = async () => {
+    console.log("run test step");
+    let activeMemoryLength: number = this.state.activeMemory.length;
+    if (activeMemoryLength > 0) {
+      // find all nodes from this one
+      let mostRecentNode: IMemoryNode =
+        this.state.activeMemory[activeMemoryLength - 1];
+      let prevId: string = mostRecentNode.id;
+      let nextNode: IMemoryNode;
+      let nextNodeOptions: INode[] = this.getNodeDetails(prevId).linksFrom;
+      console.log("run test step: check node options -", nextNodeOptions);
+
+      if (nextNodeOptions.length === 0) {
+        throw new Error(
+          "no next nodes: check whether this is a dead end or the destination"
+        );
+      }
+
+      // identify next node
+      let prevIdDiff: number = this.state.destinationId.length;
+      await Promise.all([
+        nextNodeOptions.forEach(async (node) => {
+          let optionId = node.to;
+          console.log("run test step: check node for -", optionId);
+          let currentIdDiff: number = findDiff(
+            this.state.destinationId,
+            optionId
+          ).length;
+          console.log("run test step: check node one by one -", currentIdDiff);
+          if (currentIdDiff < prevIdDiff) {
+            console.log("run test step: found a better match -", optionId);
+            prevIdDiff = currentIdDiff;
+            nextNode = {
+              id: optionId,
+              abstractionPath: this.checkAbstractionPath(optionId),
+            };
+            console.log('next node:', nextNode)
+          }
+        })
+      ]).then(() => {
+        console.log("run test step: update memory -", nextNode);
+        this.updateMemory(nextNode);
+      });
+
+      // call add to memory
+    }
     return 0;
   };
 
-  findNextNode = () => {
-    // get node details for this most recent node by ID
-    let mostRecentIndex: number = this.state.activeMemory.length - 1;
-    let mostRecentNode: IMemoryNode = this.state.activeMemory[mostRecentIndex];
-    let lastNodeId: string;
+  checkAbstractionPath = (nodeId: string) => {
+    // add as many nodes to the path as is learned and can fit
+    return [];
+  };
 
-    if (
-      mostRecentNode.abstractionPath &&
-      mostRecentNode.abstractionPath.length > 1
-    ) {
-      const abstractionPath = mostRecentNode.abstractionPath;
-      const mostRecentPathIndex: number =
-        mostRecentNode.abstractionPath.length - 1;
-      lastNodeId = abstractionPath[mostRecentPathIndex].id;
+  updateMemory = (newItem: IMemoryNode) => {
+    console.log("update memory -", newItem, this.state.activeMemory);
+    this.setState({
+      activeMemory: [...this.state.activeMemory, newItem],
+    });
+
+    // check and update abstraction capacity
+    let pathLength: number = newItem.abstractionPath
+      ? newItem.abstractionPath.length
+      : 0;
+    if (pathLength > this.state.abstractionCapacityRemaining) {
+      throw Error("abstraction path is too long");
     } else {
-      lastNodeId = mostRecentNode.id;
+      this.setState({
+        abstractionCapacityRemaining:
+          this.state.abstractionCapacityRemaining - pathLength,
+      });
     }
 
-    const nodeDetails: any = this.getNodeDetails(lastNodeId);
-    // if multiple nodes branch from here, then find the best matching child with the destination path
+    // check and update working memory
+    if (pathLength > this.props.workingMemoryLimit) {
+      let lastIndex: number = pathLength - 1;
+      let abstractionToRemove: number = 0;
+      let nodeToRemove: IMemoryNode = this.state.activeMemory[0];
 
-    if (nodeDetails && nodeDetails.linksFrom) {
-      return nodeDetails.linksFrom[0].to;
-    } else {
-      throw Error("no links from this node exist");
+      if (nodeToRemove && nodeToRemove.abstractionPath) {
+        abstractionToRemove = nodeToRemove.abstractionPath.length;
+      }
+      this.setState({
+        activeMemory: this.state.activeMemory.slice(1, lastIndex), // pop first item
+        abstractionCapacityRemaining:
+          this.state.abstractionCapacityRemaining - abstractionToRemove,
+      });
     }
+    console.log("update memory -", newItem, this.state.activeMemory);
   };
 
   generateDestination = (
     destinationDepth: number = this.props.depth,
     maxChildNodes: number = this.props.maxChildNodes
   ) => {
-    let max: String | Number = "";
-    for (let i = 0; i < destinationDepth; i++) {
-      max = String(max) + String(destinationDepth);
-    }
-    let combination = String(getRandomInt(0, Number(max)));
-    // process number to remove illegal digits
-    for (let i = 0; i < combination.length; i++) {
-      if (Number(combination[i]) > this.props.maxChildNodes) {
-        let preppendCombination: string =
-          i - 1 >= 0 ? combination.slice(0, i - 1) : "";
-        let appendCombination: string =
-          i + 1 <= combination.length
-            ? combination.slice(i + 1, combination.length)
-            : "";
-        combination =
-          preppendCombination + String(maxChildNodes - 1) + appendCombination;
-      }
-    }
+  //   console.log("set destination with: ", destinationDepth, maxChildNodes);
+  //   let max: String | Number = "";
+  //   for (let i = 0; i < destinationDepth; i++) {
+  //     max = String(max) + String((maxChildNodes > 9)? 9 : maxChildNodes);
+  //   }
+  //   let combination = String(getRandomInt(0, Number(max)));
+  //   // process number to remove illegal digits
+  //   for (let i = 0; i < combination.length; i++) {
+  //     console.log("checking each digit: ", combination[i]);
+  //     if (Number(combination[i]) > maxChildNodes) {
+  //       let preppendCombination: string =
+  //         i - 1 >= 0 ? combination.slice(0, i - 1) : "";
+  //       let appendCombination: string =
+  //         i + 1 <= combination.length
+  //           ? combination.slice(i + 1, combination.length)
+  //           : "";
+  //       combination =
+  //         preppendCombination + String(maxChildNodes - 1) + appendCombination;
+  //     }
+  //   }
     this.setState({
-      destinationId: combination,
-    });
-    return combination;
+      destinationId: '0000000000',
+    })
+  //   console.log("set destination as: ", combination);
+  //   return combination;
   };
 
   checkDestination = () => {
     const memoryLength: number = this.state.activeMemory.length;
+    console.log(
+      "checkDestination: ",
+      this.state.activeMemory[memoryLength - 1],
+      this.state.destinationId
+    );
     if (
       memoryLength > 1 &&
       this.state.destinationId &&
       this.state.activeMemory[memoryLength - 1].id === this.state.destinationId
     ) {
+      console.log('at destionation')
       return true;
     } else {
+      console.log('not at destionation')
       return false;
     }
   };
 
-  
   updateColor = async (e: any) => {
     let nodes = this.mychart.chart.series[0].nodes;
     // find the node with the right id
@@ -171,7 +251,7 @@ export class TestLogic extends React.Component<ITestProps, ITestState> {
       <div>
         <button
           onClick={() => {
-            this.runTest()
+            this.runTest();
           }}
         >
           run test
@@ -185,78 +265,3 @@ export class TestLogic extends React.Component<ITestProps, ITestState> {
     );
   }
 }
-
-const getRandomInt = (min: number, max: number) => {
-  min = Math.ceil(min);
-  max = Math.floor(max);
-  return Math.floor(Math.random() * (max - min) + min); //The maximum is exclusive and the minimum is inclusive
-};
-
-
-  // runTestStep = (destination) => {
-  //   if (this.state.activeMemory.length === 0) {
-  //     console.log("running test step - starting at root");
-  //     this.updateMemory({ id: 0 });
-  //   } else {
-  //     console.log(
-  //       "running test step - active memory is:",
-  //       this.state.activeMemory
-  //     );
-  //     let prev = this.state.activeMemory.at(-1);
-  //     let prevId;
-  //     if (prev.path && prev.path.length > 1) {
-  //       prevId = prev.path.at(-1);
-  //     } else {
-  //       prevId = prev.id;
-  //     }
-  //     console.log("prevId:", prevId, prev);
-
-  //     let nodes = this.mychart.chart.series[0].nodes; // linksFrom: [{options: { from: string, to: string }}] and linksTo: [{options: { from: string, to: string }}]
-  //     // for each node, if the ID is the most recent node, then check nodes
-  //     for (let i = 0; i < nodes.length; i++) {
-  //       if (nodes[i].id === String(prevId)) {
-  //         console.log(
-  //           "linksFrom:",
-  //           nodes[i].linksFrom,
-  //           nodes[i].linksFrom[0].to
-  //         );
-  //         // assume index 0 for now
-  //         let newId = nodes[i].linksFrom[0].to;
-  //         this.updateMemory({
-  //           id: String(newId),
-  //           path: [],
-  //         });
-  //         break;
-  //       }
-  //     }
-
-  //     // get all edges for this node -> select the best fit node to add to memory next
-  //     //    if this node is "learned" then check the next one (up to abstraction capcity)
-  //     //    if multiple nodes in-sequence are "learned" then abstract them into a path
-  //   }
-  // };
-
-
-  
-  // updateMemory = (newItem = { id: "", path: [] }) => {
-  //   this.setState({
-  //     activeMemory: this.state.activeMemory.push(newItem),
-  //   });
-  //   console.log("updateMemory - state:", this.state.activeMemory);
-  //   if (newItem.path && newItem.path.length > 1) {
-  //     if (newItem.path.length > this.state.abstractionCapacityRemaining)
-  //       throw Error("abstraction path is too long");
-  //     this.setState({
-  //       abstractionCapacityRemaining:
-  //         this.state.abstractionCapacityRemaining - newItem.path.length,
-  //     });
-  //   }
-  //   if (this.state.activeMemory.length > this.state.workingMemoryLimit) {
-  //     this.setState({
-  //       activeMemory: this.state.activeMemory.shift(),
-  //     });
-  //   }
-  //   // if working memory exceeds capacity, then "forget" the first node
-  //   //    -> if that node is an abstraction, then update capacity
-  //   //
-  // };
