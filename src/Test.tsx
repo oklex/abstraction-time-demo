@@ -251,38 +251,10 @@ export class TestLogic extends React.Component<ITestProps, ITestState> {
 
   // update according to: https://github.com/highcharts/highcharts-react#optimal-way-to-update
   updateColor = async () => {
-    let allNodes = this.mychart.chart.series[0].nodes;
-    console.log("updating color: ", allNodes);
-    // find the node with the right id
-    allNodes.forEach((node: any, index: number) => {
-      console.log(
-        "running color update outter loop",
-        node,
-        index,
-        this.state.activeMemory
-      );
-      this.state.activeMemory.map((memoryNode) => {
-        console.log(
-          "map to update if ",
-          node.id,
-          " === ",
-          memoryNode.id,
-          node.id === memoryNode.id
-        );
-        if (node.id === memoryNode.id) {
-          // this.mychart.chart.series[0].nodes[index].update({
-          //   color: "#aaa",
-          // });
-          // this.mychart.chart.series[0].data.array.forEach((element: any) => {
-          //   element.graphic.attr({
-          //     fill: '#aaa'
-          //   })
-          // });
-        }
-      });
-    });
-
-    this.mychart.chart.series[0].redraw();
+    // if the node details exist on this.state.nodeSettings
+    console.log('update color', this.state.activeMemory, this.state.nodeSettings)
+    // for each activeMemory, if it exists in node settings, then change it, else create it
+    
   };
 
   // getNodeDetails = (nodeId: string) => {
