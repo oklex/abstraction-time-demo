@@ -12,14 +12,13 @@ export default class App extends React.Component<any, any> {
       workingMemoryLimit: 5,
       abstractionLimit: 5,
       rootId: "0",
-      options: "",
-      paths: []
+      paths: [],
+      toggleShowGraph: false,
     };
   }
 
   showGraphTest = () => {
-    if (this.state.options) {
-      console.log(this.state.options)
+    if (this.state.toggleShowGraph) {
       return (
         <div>
           <TestLogic
@@ -27,7 +26,6 @@ export default class App extends React.Component<any, any> {
             maxChildNodes={this.state.maxChildNodes}
             workingMemoryLimit={this.state.workingMemoryLimit}
             abstractionLimit={this.state.abstractionLimit}
-            options={this.state.options}
             rootId={"0"}
             nodePaths={this.state.paths}
           />
@@ -37,15 +35,13 @@ export default class App extends React.Component<any, any> {
   };
 
   setOptions = () => {
-    let options = GenerateOptions(this.state.depth);
-    console.log('setting options as: ', options)
+    let paths = GenerateSeries.linearPath(this.state.depth);
+    console.log("setting paths ", paths);
     this.setState({
-      options
-    })
-    this.setState({
-      paths: GenerateSeries.linearPath(this.state.depth).data
-    })
-  }
+      toggleShowGraph: true,
+      paths,
+    });
+  };
 
   render() {
     return (

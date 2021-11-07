@@ -5,13 +5,8 @@ export const GenerateSeries = {
   linearPath(depth, knowledge = 0) {
     let maxChildren = 1;
     let data = TreeGenerator(depth, "", maxChildren, knowledge);
-    let nodes = [
-      {
-        id: "0",
-        color: "#aaaaaa"
-      }
-    ];
-    return { data, nodes };
+    console.log("linearPath", data);
+    return data;
   },
   randomTree(depth, maxNodes = 1, knowledge = 0) {
     let data = [];
@@ -66,8 +61,7 @@ const TreeGeneratorHelper = (
   return returnData.concat(data);
 };
 
-export const GenerateOptions = (networkDepth) => {
-  const { data, nodes } = GenerateSeries.linearPath(networkDepth)
+export const GenerateOptions = (customData, customNodeDetails = []) => {
   return {
     chart: {
       type: "networkgraph",
@@ -106,8 +100,8 @@ export const GenerateOptions = (networkDepth) => {
           linkFormat: "",
           allowOverlap: true,
         },
-        data: data,
-        nodes: nodes
+        data: customData,
+        nodes: customNodeDetails,
       },
     ],
   };

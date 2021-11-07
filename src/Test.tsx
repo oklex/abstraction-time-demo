@@ -5,6 +5,7 @@ import HighchartsReact from "highcharts-react-official";
 import networkgraph from "highcharts/modules/networkgraph";
 import { findDiff, getRandomInt } from "./utils";
 import { TIMEOUT } from "dns";
+import { GenerateOptions, GenerateSeries } from "./SeriesGenerator";
 
 if (typeof Highcharts === "object") {
   networkgraph(Highcharts);
@@ -38,7 +39,6 @@ interface ITestProps {
   abstractionLimit: number;
   nodePaths: ILinks[];
 
-  options: any;
   rootId: string;
 }
 
@@ -48,6 +48,10 @@ interface ITestState {
   abstractionCapacityRemaining: number;
 
   running: boolean;
+  options: any;
+  nodeSettings: any[];
+
+  showGraph: boolean;
 }
 
 export class TestLogic extends React.Component<ITestProps, ITestState> {
@@ -61,11 +65,18 @@ export class TestLogic extends React.Component<ITestProps, ITestState> {
       activeMemory: [],
       abstractionCapacityRemaining: this.props.abstractionLimit,
       running: false,
+      options: {},
+      nodeSettings: [],
+      showGraph: false,
     };
   }
 
   componentDidMount = () => {
-    console.log("paths: ", this.props.nodePaths);
+    console.log("paths in props: ", this.props.nodePaths);
+    this.setState({
+      options: GenerateOptions(this.props.nodePaths, this.state.nodeSettings),
+      showGraph: true,
+    });
   };
 
   runTest = async () => {
@@ -244,9 +255,20 @@ export class TestLogic extends React.Component<ITestProps, ITestState> {
     console.log("updating color: ", allNodes);
     // find the node with the right id
     allNodes.forEach((node: any, index: number) => {
-      console.log("running color update outter loop", node, index, this.state.activeMemory);
+      console.log(
+        "running color update outter loop",
+        node,
+        index,
+        this.state.activeMemory
+      );
       this.state.activeMemory.map((memoryNode) => {
-        console.log("map to update if ", node.id, " === ", memoryNode.id, node.id === memoryNode.id);
+        console.log(
+          "map to update if ",
+          node.id,
+          " === ",
+          memoryNode.id,
+          node.id === memoryNode.id
+        );
         if (node.id === memoryNode.id) {
           // this.mychart.chart.series[0].nodes[index].update({
           //   color: "#aaa",
@@ -259,8 +281,8 @@ export class TestLogic extends React.Component<ITestProps, ITestState> {
         }
       });
     });
-    
-    this.mychart.chart.series[0].redraw()
+
+    this.mychart.chart.series[0].redraw();
   };
 
   // getNodeDetails = (nodeId: string) => {
@@ -304,6 +326,21 @@ export class TestLogic extends React.Component<ITestProps, ITestState> {
   // // });
   // };
 
+  showGraph = () => {
+    console.log('show graph?', this.state.showGraph)
+    if (this.state.showGraph) {
+      return (
+        <HighchartsReact
+          ref={(element) => (this.mychart = element)}
+          highcharts={Highcharts}
+          options={this.state.options}
+        />
+      );
+    } else {
+      return <div></div>;
+    }
+  };
+
   render() {
     return (
       <div>
@@ -314,11 +351,7 @@ export class TestLogic extends React.Component<ITestProps, ITestState> {
         >
           run test
         </button>
-        <HighchartsReact
-          ref={(element) => (this.mychart = element)}
-          highcharts={Highcharts}
-          options={this.props.options}
-        />
+        {this.showGraph()}
       </div>
     );
   }
