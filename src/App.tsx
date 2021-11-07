@@ -36,6 +36,7 @@ export default class App extends React.Component<any, any> {
 
   setOptions = () => {
     let options = GenerateOptions(this.state.depth);
+    console.log('setting options as: ', options)
     this.setState({
       options
     })
