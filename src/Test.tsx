@@ -238,6 +238,7 @@ export class TestLogic extends React.Component<ITestProps, ITestState> {
     }
   };
 
+  // update according to: https://github.com/highcharts/highcharts-react#optimal-way-to-update
   updateColor = async () => {
     let allNodes = this.mychart.chart.series[0].nodes;
     console.log("updating color: ", allNodes);
@@ -250,13 +251,16 @@ export class TestLogic extends React.Component<ITestProps, ITestState> {
           // this.mychart.chart.series[0].nodes[index].update({
           //   color: "#aaa",
           // });
-          // this.mychart.chart.series[0].nodes[index] = {
-          //   ...this.mychart.chart.series[0].nodes[index],
-          //   color: "#aaa",
-          // }
+          // this.mychart.chart.series[0].data.array.forEach((element: any) => {
+          //   element.graphic.attr({
+          //     fill: '#aaa'
+          //   })
+          // });
         }
       });
     });
+    
+    this.mychart.chart.series[0].redraw()
   };
 
   // getNodeDetails = (nodeId: string) => {
