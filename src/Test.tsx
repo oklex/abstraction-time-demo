@@ -25,8 +25,8 @@ interface INode extends Any {
 }
 
 interface ILinks extends Any {
-  to?: string;
-  from?: string;
+  to: string;
+  from: string;
 }
 
 type Any = any;
@@ -36,6 +36,7 @@ interface ITestProps {
   maxChildNodes: number;
   workingMemoryLimit: number;
   abstractionLimit: number;
+  nodePaths: ILinks[];
 
   options: any;
   rootId: string;
@@ -63,6 +64,10 @@ export class TestLogic extends React.Component<ITestProps, ITestState> {
     };
   }
 
+  componentDidMount = () => {
+    console.log("paths: ", this.props.nodePaths);
+  };
+
   runTest = async () => {
     if (!this.state.destinationId) {
       this.generateDestination();
@@ -75,7 +80,7 @@ export class TestLogic extends React.Component<ITestProps, ITestState> {
       this.setState({
         running: true,
       });
-      await Promise.all([this.runTestStep()]).then(() => {
+      await this.runTestStep().then(() => {
         this.setState({
           running: false,
         });
@@ -92,9 +97,18 @@ export class TestLogic extends React.Component<ITestProps, ITestState> {
         this.state.activeMemory[activeMemoryLength - 1];
       let prevId: string = mostRecentNode.id;
       let nextNode: IMemoryNode;
-      let nextNodeOptions: INode[] = this.getNodeDetails(prevId).linksFrom;
-      // console.log("run test step: check node options -", nextNodeOptions);
 
+      let nextNodeOptions: ILinks[] = [];
+
+      for (let i = 0; i < this.props.nodePaths.length; i++) {
+        console.log("match node details");
+        if (String(this.props.nodePaths[i].from) === String(prevId)) {
+          console.log("match found", this.props.nodePaths[i]);
+          nextNodeOptions.push(this.props.nodePaths[i]);
+          break;
+        }
+      }
+      console.log("node details", nextNodeOptions);
       if (nextNodeOptions.length === 0) {
         throw new Error(
           "no next nodes: check whether this is a dead end or the destination"
@@ -104,9 +118,9 @@ export class TestLogic extends React.Component<ITestProps, ITestState> {
       // identify next node
       let prevIdDiff: number = this.state.destinationId.length;
       await Promise.all([
-        nextNodeOptions.forEach(async (node) => {
-          let optionId = node.to;
-          // console.log("run test step: check node for -", optionId);
+        nextNodeOptions.forEach(async (node: ILinks) => {
+          let optionId: string = node.to;
+          console.log("run test step: check if node is best choice", optionId);
           let currentIdDiff: number = findDiff(
             this.state.destinationId,
             optionId
@@ -124,8 +138,14 @@ export class TestLogic extends React.Component<ITestProps, ITestState> {
         }),
       ]).then(async () => {
         // console.log("run test step: update memory -", nextNode);
-        await this.updateMemory(nextNode);
+        await Promise.all([this.updateMemory(nextNode)]).then(async () => {
+          await this.updateColor().catch(() => {
+            throw new Error("update color failed");
+          });
+        });
       });
+      // });
+      // console.log("run test step: check node options -", nextNodeOptions);
 
       // call add to memory
     }
@@ -138,7 +158,7 @@ export class TestLogic extends React.Component<ITestProps, ITestState> {
   };
 
   updateMemory = async (newItem: IMemoryNode) => {
-    // console.log("update memory -", newItem, this.state.activeMemory);
+    console.log("update memory -", newItem, this.state.activeMemory);
     this.setState({
       activeMemory: this.state.activeMemory.concat([newItem]),
     });
@@ -170,9 +190,6 @@ export class TestLogic extends React.Component<ITestProps, ITestState> {
           this.state.abstractionCapacityRemaining - abstractionToRemove,
       });
     }
-
-    // await this.updateColor()
-    // console.log("update memory -", newItem, this.state.activeMemory);
   };
 
   generateDestination = (
@@ -213,7 +230,7 @@ export class TestLogic extends React.Component<ITestProps, ITestState> {
       this.state.destinationId &&
       this.state.activeMemory[memoryLength - 1].id === this.state.destinationId
     ) {
-      console.log("at destionation");
+      console.log("at destination");
       return true;
     } else {
       // console.log('not at destionation')
@@ -223,36 +240,65 @@ export class TestLogic extends React.Component<ITestProps, ITestState> {
 
   updateColor = async () => {
     let allNodes = this.mychart.chart.series[0].nodes;
+    console.log("updating color: ", allNodes);
     // find the node with the right id
-    await allNodes.forEach((node: any, index: number) => {
+    allNodes.forEach((node: any, index: number) => {
+      console.log("running color update outter loop", node, index, this.state.activeMemory);
       this.state.activeMemory.map((memoryNode) => {
+        console.log("map to update if ", node.id, " === ", memoryNode.id, node.id === memoryNode.id);
         if (node.id === memoryNode.id) {
-          this.mychart.chart.series[0].nodes[index].update({
-            color: "#aaa",
-          });
+          // this.mychart.chart.series[0].nodes[index].update({
+          //   color: "#aaa",
+          // });
+          // this.mychart.chart.series[0].nodes[index] = {
+          //   ...this.mychart.chart.series[0].nodes[index],
+          //   color: "#aaa",
+          // }
         }
       });
     });
   };
 
-  getNodeDetails = (nodeId: string) => {
-    console.log('get node details')
-    let nodes: INode[] = this.mychart.chart.series[0].nodes;
-    let returnNode: any | null = null;
-    console.log('nodes: ', nodes)
-    for (let i = 0; i < nodes.length; i++) {
-      console.log('get node details: ', nodes[i], nodeId)
-      if (String(nodes[i].id) === String(nodeId)) {
-        returnNode = nodes[i];
-      }
-    }
-     if (!returnNode) {
-       throw new Error("no return node was found in list:verify that this node id is correct")
-     } else {
-       console.log('node details found:', returnNode)
-     return returnNode;
-     }
-  };
+  // getNodeDetails = (nodeId: string) => {
+  //   var returnNode: any | null = null;
+
+  //   for (let i = 0; i < this.state.nodeDetails.length; i++) {
+  //     console.log(
+  //       "match node details",
+  //       String(nodeId),
+  //       String(this.state.nodeDetails[i].id),
+  //       String(nodeId) === String(this.state.nodeDetails[i].id)
+  //     );
+  //     if (String(this.state.nodeDetails[i].id) === String(nodeId)) {
+  //       returnNode = this.state.nodeDetails[i];
+  //       console.log("found a matching node detail", returnNode);
+  //       // return this.state.nodeDetails[i];
+  //       break;
+  //     }
+  //   }
+  //   return returnNode;
+
+  // await Promise.all([
+  //   this.state.nodeDetails.map((details) => {
+  //     console.log(
+  //       "match node details",
+  //       String(nodeId),
+  //       String(details.id),
+  //       String(nodeId) === String(details.id)
+  //     );
+  //   }),
+  // ]).then((returnVal: any[]) => {
+  //   console.log("return", returnVal, returnNode);
+  //   return returnNode;
+  // });
+  // // .then(() => {
+  // //   if (!returnNode) {
+  // //     throw new Error(
+  // //       "no return node was found in list: verify that this node id is correct"
+  // //     );
+  // //   }
+  // // });
+  // };
 
   render() {
     return (

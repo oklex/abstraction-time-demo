@@ -1,6 +1,6 @@
 import React, { createRef } from "react";
 import { render } from "react-dom";
-import { GenerateOptions } from "./SeriesGenerator";
+import { GenerateOptions, GenerateSeries } from "./SeriesGenerator";
 import { TestLogic } from "./Test";
 
 export default class App extends React.Component<any, any> {
@@ -13,6 +13,7 @@ export default class App extends React.Component<any, any> {
       abstractionLimit: 5,
       rootId: "0",
       options: "",
+      paths: []
     };
   }
 
@@ -28,6 +29,7 @@ export default class App extends React.Component<any, any> {
             abstractionLimit={this.state.abstractionLimit}
             options={this.state.options}
             rootId={"0"}
+            nodePaths={this.state.paths}
           />
         </div>
       );
@@ -39,6 +41,9 @@ export default class App extends React.Component<any, any> {
     console.log('setting options as: ', options)
     this.setState({
       options
+    })
+    this.setState({
+      paths: GenerateSeries.linearPath(this.state.depth).data
     })
   }
 
