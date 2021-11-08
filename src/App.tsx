@@ -9,7 +9,7 @@ export default class App extends React.Component<any, any> {
     this.state = {
       depth: 10,
       maxChildNodes: 5,
-      workingMemoryLimit: 5,
+      workingMemoryLimit: 4,
       abstractionLimit: 5,
       rootId: "0",
       paths: [],

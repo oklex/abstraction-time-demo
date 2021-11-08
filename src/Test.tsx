@@ -47,7 +47,6 @@ interface ITestState {
   activeMemory: IMemoryNode[];
   abstractionCapacityRemaining: number;
 
-  running: boolean;
   options: any;
   nodeSettings: any[];
 
@@ -64,7 +63,6 @@ export class TestLogic extends React.Component<ITestProps, ITestState> {
       destinationId: "",
       activeMemory: [],
       abstractionCapacityRemaining: this.props.abstractionLimit,
-      running: false,
       options: {},
       nodeSettings: [],
       showGraph: false,
@@ -79,27 +77,26 @@ export class TestLogic extends React.Component<ITestProps, ITestState> {
     });
   };
 
-  runTest = async () => {
+  startTest = async () => {
+    if (this.checkDestination()) {
+      console.log("already at destination");
+      return;
+    }
     if (!this.state.destinationId) {
       this.generateDestination();
     }
-    console.log("run test: ", this.state.activeMemory, this.props.rootId);
+    console.log("start test: ", this.state.activeMemory, this.props.rootId);
     this.setState({
       activeMemory: [...this.state.activeMemory, { id: this.props.rootId }],
     });
-    while (!this.checkDestination() && !this.state.running) {
-      this.setState({
-        running: true,
-      });
-      await this.runTestStep().then(() => {
-        this.setState({
-          running: false,
-        });
-      });
-    }
   };
 
   runTestStep = async () => {
+    if (this.checkDestination()) {
+      console.log("already at destination");
+      return;
+    }
+
     console.log("run test step: ", this.state.activeMemory);
     let activeMemoryLength: number = this.state.activeMemory.length;
     if (activeMemoryLength > 0) {
@@ -251,10 +248,36 @@ export class TestLogic extends React.Component<ITestProps, ITestState> {
 
   // update according to: https://github.com/highcharts/highcharts-react#optimal-way-to-update
   updateColor = async () => {
-    // if the node details exist on this.state.nodeSettings
-    console.log('update color', this.state.activeMemory, this.state.nodeSettings)
+    console.log(
+      "update color",
+      this.state.activeMemory,
+      this.state.nodeSettings
+    );
     // for each activeMemory, if it exists in node settings, then change it, else create it
-    
+    let newNodeSettings: any[] = [];
+    console.log("activeMemory in updateColor", this.state.activeMemory);
+    await Promise.all([
+      this.state.activeMemory.forEach((node: any, index: number) => {
+        console.log("acitve memory in updateColor", node);
+        newNodeSettings.push({
+          id: node.id,
+          color: "#aaa",
+        });
+      }),
+      this.setState({
+        showGraph: false,
+      }),
+    ])
+      .then(() => {
+        console.log("newNodeSettings", newNodeSettings);
+        this.setState({
+          options: GenerateOptions(this.props.nodePaths, newNodeSettings),
+          showGraph: true,
+        });
+      })
+      .finally(() => {
+        setTimeout(() => {}, 1000);
+      });
   };
 
   // getNodeDetails = (nodeId: string) => {
@@ -299,7 +322,7 @@ export class TestLogic extends React.Component<ITestProps, ITestState> {
   // };
 
   showGraph = () => {
-    console.log('show graph?', this.state.showGraph)
+    console.log("show graph?", this.state.showGraph);
     if (this.state.showGraph) {
       return (
         <HighchartsReact
@@ -316,12 +339,20 @@ export class TestLogic extends React.Component<ITestProps, ITestState> {
   render() {
     return (
       <div>
+        <br />
         <button
           onClick={() => {
-            this.runTest();
+            this.startTest();
           }}
         >
-          run test
+          start test
+        </button>
+        <button
+          onClick={() => {
+            this.runTestStep();
+          }}
+        >
+          run test step
         </button>
         {this.showGraph()}
       </div>
