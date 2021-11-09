@@ -43,13 +43,13 @@ export default class App extends React.Component<any, any> {
     let paths: any[];
     if (type === networkType.path) {
       console.log("setting linear paths");
-      paths = GenerateSeries.linearPath(this.state.depth);
+      paths = GenerateSeries.linearPath(depth);
     } else if (type === networkType.tree) {
-      paths = GenerateSeries.n_aryTree(this.state.depth, this.state.maxChildNodes);
+      paths = GenerateSeries.n_aryTree(depth, this.state.maxChildNodes);
     } else if (type === networkType.network) {
-      paths = GenerateSeries.n_aryTree(this.state.depth, this.state.maxChildNodes);
+      paths = GenerateSeries.n_aryTree(depth, this.state.maxChildNodes);
     } else {
-      throw new Error('option network graph setting is invalid')
+      throw new Error("option network graph setting is invalid");
     }
     console.log("setting paths ", paths);
     this.setState({
@@ -61,7 +61,7 @@ export default class App extends React.Component<any, any> {
   render() {
     return (
       <div>
-        <button onClick={() => this.setOptions(10, networkType.path)}>
+        <button onClick={() => this.setOptions(20, networkType.path)}>
           set options for linear path
         </button>
         <button onClick={() => this.setOptions(10, networkType.tree)}>
@@ -71,6 +71,16 @@ export default class App extends React.Component<any, any> {
           set options for network
         </button>
         {this.showGraphTest()}
+        <br />
+        <div>
+          <p>to-do next</p>
+          <ul>
+            <li>update destination generation logic</li>
+            <li>integrate abstraction path logic</li>
+            <li>create the tree path generation logic</li>
+            <li>verify the tree path verification logic</li>
+          </ul>
+        </div>
       </div>
     );
   }
