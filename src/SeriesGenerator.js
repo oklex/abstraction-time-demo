@@ -8,16 +8,14 @@ export const GenerateSeries = {
     console.log("linearPath", data);
     return data;
   },
-  randomTree(depth, maxNodes = 1, knowledge = 0) {
+  n_aryTree(depth, maxNodes = 1, knowledge = 0) {
     let data = [];
-    let nodes = [];
-    return { data, nodes };
+    return data;
   },
   randomNetwork(depth, maxNodes = 1, knowledge = 0) {
     // different from tree due to random connections
     let data = [];
-    let nodes = [];
-    return { data, nodes };
+    return data;
   },
 };
 
@@ -50,13 +48,8 @@ const TreeGeneratorHelper = (
       },
     ];
     if (currentDepth < maxDepth) {
-      console.log('current depth', currentDepth, maxDepth, thisNode)
-      data = TreeGeneratorHelper(
-        currentDepth,
-        maxDepth,
-        maxChildren,
-        thisNode
-      );
+      console.log("current depth", currentDepth, maxDepth, thisNode);
+      data = TreeGeneratorHelper(currentDepth, maxDepth, maxChildren, thisNode);
     }
   }
 

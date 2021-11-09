@@ -3,6 +3,11 @@ import { render } from "react-dom";
 import { GenerateOptions, GenerateSeries } from "./SeriesGenerator";
 import { TestLogic } from "./Test";
 
+enum networkType {
+  path,
+  tree,
+  network,
+}
 export default class App extends React.Component<any, any> {
   constructor(props: any) {
     super(props);
@@ -34,8 +39,18 @@ export default class App extends React.Component<any, any> {
     }
   };
 
-  setOptions = () => {
-    let paths = GenerateSeries.linearPath(this.state.depth);
+  setOptions = (depth: number, type: networkType) => {
+    let paths: any[];
+    if (type === networkType.path) {
+      console.log("setting linear paths");
+      paths = GenerateSeries.linearPath(this.state.depth);
+    } else if (type === networkType.tree) {
+      paths = GenerateSeries.n_aryTree(this.state.depth, this.state.maxChildNodes);
+    } else if (type === networkType.network) {
+      paths = GenerateSeries.n_aryTree(this.state.depth, this.state.maxChildNodes);
+    } else {
+      throw new Error('option network graph setting is invalid')
+    }
     console.log("setting paths ", paths);
     this.setState({
       toggleShowGraph: true,
@@ -46,7 +61,15 @@ export default class App extends React.Component<any, any> {
   render() {
     return (
       <div>
-        <button onClick={(e) => this.setOptions()}>set options</button>
+        <button onClick={() => this.setOptions(10, networkType.path)}>
+          set options for linear path
+        </button>
+        <button onClick={() => this.setOptions(10, networkType.tree)}>
+          set options for tree
+        </button>
+        <button onClick={() => this.setOptions(10, networkType.network)}>
+          set options for network
+        </button>
         {this.showGraphTest()}
       </div>
     );
