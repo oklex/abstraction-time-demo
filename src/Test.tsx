@@ -5,7 +5,7 @@ import HighchartsReact from "highcharts-react-official";
 import networkgraph from "highcharts/modules/networkgraph";
 import { findDiff, getRandomInt } from "./utils";
 import { TIMEOUT } from "dns";
-import { GenerateOptions, GenerateSeries } from "./SeriesGenerator";
+import { GenerateOptions } from "./SeriesGenerator";
 
 if (typeof Highcharts === "object") {
   networkgraph(Highcharts);
@@ -52,6 +52,8 @@ interface ITestState {
 
   showGraph: boolean;
 }
+
+const hexColor: string = 'FF5733'
 
 export class TestLogic extends React.Component<ITestProps, ITestState> {
   mychart: any;
@@ -261,7 +263,7 @@ export class TestLogic extends React.Component<ITestProps, ITestState> {
         console.log("acitve memory in updateColor", node);
         newNodeSettings.push({
           id: node.id,
-          color: "#aaa",
+          color: "#" + hexColor,
         });
       }),
       this.setState({
