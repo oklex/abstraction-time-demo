@@ -32,12 +32,13 @@ const TreeGenerator = (
 };
 
 const TreeGeneratorHelper = (
-  currentDepth,
+  previousDepth,
   maxDepth,
   maxChildren,
   parentNodeId
 ) => {
   // recursively returns the new data
+  let currentDepth = previousDepth + 1;
   let returnData = [];
   let data = [];
   for (let i = 0; i < maxChildren; i++) {
@@ -49,8 +50,9 @@ const TreeGeneratorHelper = (
       },
     ];
     if (currentDepth < maxDepth) {
+      console.log('current depth', currentDepth, maxDepth, thisNode)
       data = TreeGeneratorHelper(
-        currentDepth + 1,
+        currentDepth,
         maxDepth,
         maxChildren,
         thisNode

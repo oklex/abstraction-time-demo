@@ -238,7 +238,7 @@ export class TestLogic extends React.Component<ITestProps, ITestState> {
       this.state.destinationId &&
       this.state.activeMemory[memoryLength - 1].id === this.state.destinationId
     ) {
-      console.log("at destination");
+      console.log("at destination", this.state.destinationId.length);
       return true;
     } else {
       // console.log('not at destionation')
