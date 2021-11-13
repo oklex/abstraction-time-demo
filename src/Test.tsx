@@ -127,7 +127,7 @@ export class TestLogic extends React.Component<ITestProps, ITestState> {
 
       // identify next node
       let prevIdDiff: number = this.state.destinationId.length;
-      await Promise.all([
+      return await Promise.all([
         nextNodeOptions.forEach(async (node: ILinks) => {
           let optionId: string = node.to;
           console.log("run test step: check if node is best choice", optionId);
@@ -149,7 +149,9 @@ export class TestLogic extends React.Component<ITestProps, ITestState> {
       ]).then(async () => {
         // console.log("run test step: update memory -", nextNode);
         await Promise.all([this.updateMemory(nextNode)]).then(async () => {
-          await this.updateColor().catch(() => {
+          await this.updateColor().then(() => {
+            console.log('done entire step')
+          }).catch(() => {
             throw new Error("update color failed");
           });
         });
@@ -159,7 +161,6 @@ export class TestLogic extends React.Component<ITestProps, ITestState> {
 
       // call add to memory
     }
-    return 0;
   };
 
   checkAbstractionPath = (nodeId: string) => {
@@ -258,7 +259,7 @@ export class TestLogic extends React.Component<ITestProps, ITestState> {
     // for each activeMemory, if it exists in node settings, then change it, else create it
     let newNodeSettings: any[] = [];
     console.log("activeMemory in updateColor", this.state.activeMemory);
-    await Promise.all([
+    return await Promise.all([
       this.state.activeMemory.forEach((node: any, index: number) => {
         console.log("acitve memory in updateColor", node);
         newNodeSettings.push({
