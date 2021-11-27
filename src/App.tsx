@@ -12,8 +12,8 @@ export default class App extends React.Component<any, any> {
   constructor(props: any) {
     super(props);
     this.state = {
-      depth: 20,
-      maxChildNodes: 5,
+      depth: 5,
+      maxChildNodes: 2,
       workingMemoryLimit: 4,
       abstractionLimit: 5,
       rootId: "0",

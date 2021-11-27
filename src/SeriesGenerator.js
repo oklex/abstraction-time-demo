@@ -9,7 +9,8 @@ export const GenerateSeries = {
     return data;
   },
   n_aryTree(depth, maxNodes = 1, knowledge = 0) {
-    let data = [];
+    let data = TreeGenerator(depth, "", maxNodes, knowledge);
+    console.log(`${maxNodes}_ary tree`, data);
     return data;
   },
   randomNetwork(depth, maxNodes = 1, knowledge = 0) {
@@ -41,18 +42,28 @@ const TreeGeneratorHelper = (
   let data = [];
   for (let i = 0; i < maxChildren; i++) {
     let thisNode = parentNodeId.concat(i.toString());
-    returnData = [
-      {
-        from: parentNodeId,
-        to: thisNode,
-      },
-    ];
+    console.log("new node id:", thisNode, currentDepth);
+    returnData.push({
+      from: parentNodeId,
+      to: thisNode,
+    });
     if (currentDepth < maxDepth) {
-      console.log("current depth", currentDepth, maxDepth, thisNode);
-      data = TreeGeneratorHelper(currentDepth, maxDepth, maxChildren, thisNode);
+      console.log("call recurrsive", currentDepth, maxDepth, thisNode);
+      let childrenData = TreeGeneratorHelper(
+        currentDepth,
+        maxDepth,
+        maxChildren,
+        thisNode
+      );
+      data = data.concat(childrenData);
+      console.log(
+        "DATA - suspect it is not inclusive",
+        childrenData,
+        data,
+        ` - should be children of ${thisNode}`
+      );
     }
   }
-
   return returnData.concat(data);
 };
 

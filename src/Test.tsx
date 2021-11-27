@@ -84,10 +84,9 @@ export class TestLogic extends React.Component<ITestProps, ITestState> {
       return;
     }
     if (!this.state.destinationId) {
-      await this.generateDestination().then((destination: string) => {
+      await this.generateDestination().then(() => {
         console.log("start test: ", this.state.activeMemory, this.props.rootId);
         this.setState({
-          destinationId: destination,
           activeMemory: [...this.state.activeMemory, { id: this.props.rootId }],
         });
       });
@@ -111,6 +110,7 @@ export class TestLogic extends React.Component<ITestProps, ITestState> {
 
       let nextNodeOptions: ILinks[] = [];
 
+      // this should be an async forEach
       for (let i = 0; i < this.props.nodePaths.length; i++) {
         console.log("match node details");
         if (String(this.props.nodePaths[i].from) === String(prevId)) {
@@ -119,6 +119,7 @@ export class TestLogic extends React.Component<ITestProps, ITestState> {
           break;
         }
       }
+      // then
       console.log("node details", nextNodeOptions);
       if (nextNodeOptions.length === 0) {
         throw new Error(
@@ -126,8 +127,10 @@ export class TestLogic extends React.Component<ITestProps, ITestState> {
         );
       }
 
+      // then
       // identify next node
       let prevIdDiff: number = this.state.destinationId.length;
+      console.log('nextNodeOptions', nextNodeOptions, this.props.nodePaths) // nextNodeOptions is wrong
       return await Promise.all([
         nextNodeOptions.forEach(async (node: ILinks) => {
           let optionId: string = node.to;
@@ -136,9 +139,9 @@ export class TestLogic extends React.Component<ITestProps, ITestState> {
             this.state.destinationId,
             optionId
           ).length;
-          // console.log("run test step: check node one by one -", currentIdDiff);
+          console.log("run test step: check node one by one -", currentIdDiff);
           if (currentIdDiff < prevIdDiff) {
-            // console.log("run test step: found a better match -", optionId);
+            console.log("run test step: found a better match -", optionId);
             prevIdDiff = currentIdDiff;
             nextNode = {
               id: optionId,
@@ -212,26 +215,29 @@ export class TestLogic extends React.Component<ITestProps, ITestState> {
     maxChildNodes: number = this.props.maxChildNodes
   ) => {
     let Promises: any = [];
-    let destination: string = "";
-    for (let i = 0; i < destinationDepth; i++) {
+    let destination: string = "0"; // start at root 0
+    for (let i = 0; i < destinationDepth - 1; i++) {
       Promises.push(
-        this.addRandomDigit(maxChildNodes, (num: number) => {
-          console.log('random num', num , ' out of ', destinationDepth); (destination += "0");
+        this.addRandomDigit(maxChildNodes, (num: string) => {
+          console.log('random num', num , ' out of ', destinationDepth); (destination += num);
         })
       );
     }
     return await Promise.all(Promises).then(() => {
-      return destination;
+      console.log(`destination set to ${destination}`)
+      this.setState({
+        destinationId: destination
+      })
     });
     //https://stackoverflow.com/questions/11488014/asynchronous-process-inside-a-javascript-for-loop
   };
 
-  addRandomDigit = async (limit: number, callback: (num: number) => any) => {
+  addRandomDigit = async (limit: number, callback: (num: string) => any) => {
     let newLimit = limit > 9 ? 9 : limit;
     let min = Math.ceil(0);
     let max = Math.floor(newLimit);
     let random = Math.floor(Math.random() * (max - min + 1)) + min;
-    callback(random);
+    callback(String(random));
   };
 
   checkDestination = () => {
