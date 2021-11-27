@@ -3,8 +3,7 @@ import { render } from "react-dom";
 import Highcharts from "highcharts/highstock";
 import HighchartsReact from "highcharts-react-official";
 import networkgraph from "highcharts/modules/networkgraph";
-import { findDiff, getRandomInt } from "./utils";
-import { TIMEOUT } from "dns";
+import { findDiff } from "./utils";
 import { GenerateOptions } from "./SeriesGenerator";
 
 if (typeof Highcharts === "object") {
@@ -53,7 +52,7 @@ interface ITestState {
   showGraph: boolean;
 }
 
-const hexColor: string = 'FF5733'
+const hexColor: string = "FF5733";
 
 export class TestLogic extends React.Component<ITestProps, ITestState> {
   mychart: any;
@@ -85,12 +84,14 @@ export class TestLogic extends React.Component<ITestProps, ITestState> {
       return;
     }
     if (!this.state.destinationId) {
-      this.generateDestination();
+      await this.generateDestination().then((destination: string) => {
+        console.log("start test: ", this.state.activeMemory, this.props.rootId);
+        this.setState({
+          destinationId: destination,
+          activeMemory: [...this.state.activeMemory, { id: this.props.rootId }],
+        });
+      });
     }
-    console.log("start test: ", this.state.activeMemory, this.props.rootId);
-    this.setState({
-      activeMemory: [...this.state.activeMemory, { id: this.props.rootId }],
-    });
   };
 
   runTestStep = async () => {
@@ -147,13 +148,15 @@ export class TestLogic extends React.Component<ITestProps, ITestState> {
           }
         }),
       ]).then(async () => {
-        // console.log("run test step: update memory -", nextNode);
+        console.log("run test step: update memory -", nextNode);
         await Promise.all([this.updateMemory(nextNode)]).then(async () => {
-          await this.updateColor().then(() => {
-            console.log('done entire step')
-          }).catch(() => {
-            throw new Error("update color failed");
-          });
+          await this.updateColor()
+            .then(() => {
+              console.log("done entire step");
+            })
+            .catch(() => {
+              throw new Error("update color failed");
+            });
         });
       });
       // });
@@ -175,7 +178,8 @@ export class TestLogic extends React.Component<ITestProps, ITestState> {
     });
 
     // check and update abstraction capacity
-    let abstractPathLength: number = newItem.abstractionPath
+    console.log('abstractionPath? ', newItem.abstractionPath)
+    let abstractPathLength: number =  newItem.abstractionPath
       ? newItem.abstractionPath.length
       : 0;
     if (abstractPathLength > this.state.abstractionCapacityRemaining) {
@@ -203,35 +207,31 @@ export class TestLogic extends React.Component<ITestProps, ITestState> {
     }
   };
 
-  generateDestination = (
+  generateDestination = async (
     destinationDepth: number = this.props.depth,
     maxChildNodes: number = this.props.maxChildNodes
   ) => {
-    //   console.log("set destination with: ", destinationDepth, maxChildNodes);
-    //   let max: String | Number = "";
-    //   for (let i = 0; i < destinationDepth; i++) {
-    //     max = String(max) + String((maxChildNodes > 9)? 9 : maxChildNodes);
-    //   }
-    //   let combination = String(getRandomInt(0, Number(max)));
-    //   // process number to remove illegal digits
-    //   for (let i = 0; i < combination.length; i++) {
-    //     console.log("checking each digit: ", combination[i]);
-    //     if (Number(combination[i]) > maxChildNodes) {
-    //       let preppendCombination: string =
-    //         i - 1 >= 0 ? combination.slice(0, i - 1) : "";
-    //       let appendCombination: string =
-    //         i + 1 <= combination.length
-    //           ? combination.slice(i + 1, combination.length)
-    //           : "";
-    //       combination =
-    //         preppendCombination + String(maxChildNodes - 1) + appendCombination;
-    //     }
-    //   }
-    this.setState({
-      destinationId: "0000000000",
+    let Promises: any = [];
+    let destination: string = "";
+    for (let i = 0; i < destinationDepth; i++) {
+      Promises.push(
+        this.addRandomDigit(maxChildNodes, (num: number) => {
+          console.log('random num', num , ' out of ', destinationDepth); (destination += "0");
+        })
+      );
+    }
+    return await Promise.all(Promises).then(() => {
+      return destination;
     });
-    //   console.log("set destination as: ", combination);
-    //   return combination;
+    //https://stackoverflow.com/questions/11488014/asynchronous-process-inside-a-javascript-for-loop
+  };
+
+  addRandomDigit = async (limit: number, callback: (num: number) => any) => {
+    let newLimit = limit > 9 ? 9 : limit;
+    let min = Math.ceil(0);
+    let max = Math.floor(newLimit);
+    let random = Math.floor(Math.random() * (max - min + 1)) + min;
+    callback(random);
   };
 
   checkDestination = () => {

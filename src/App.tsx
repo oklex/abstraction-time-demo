@@ -12,7 +12,7 @@ export default class App extends React.Component<any, any> {
   constructor(props: any) {
     super(props);
     this.state = {
-      depth: 10,
+      depth: 20,
       maxChildNodes: 5,
       workingMemoryLimit: 4,
       abstractionLimit: 5,
@@ -24,6 +24,7 @@ export default class App extends React.Component<any, any> {
 
   showGraphTest = () => {
     if (this.state.toggleShowGraph) {
+      console.log('showing graph', this.state.depth, this.state.maxChildNodes, this.state.workingMemoryLimit)
       return (
         <div>
           <TestLogic
@@ -61,13 +62,13 @@ export default class App extends React.Component<any, any> {
   render() {
     return (
       <div>
-        <button onClick={() => this.setOptions(20, networkType.path)}>
+        <button onClick={() => this.setOptions(this.state.depth, networkType.path)}>
           set options for linear path
         </button>
-        <button onClick={() => this.setOptions(10, networkType.tree)}>
+        <button onClick={() => this.setOptions(this.state.depth, networkType.tree)}>
           set options for tree
         </button>
-        <button onClick={() => this.setOptions(10, networkType.network)}>
+        <button onClick={() => this.setOptions(this.state.depth, networkType.network)}>
           set options for network
         </button>
         {this.showGraphTest()}
